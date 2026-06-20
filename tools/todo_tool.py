@@ -1,26 +1,19 @@
 from models.llm import llm
 
 def write_todos(user_task):
+    if llm is None:
+        return ["ERROR: LLM not initialized"]
+
     prompt = f"""
-Break this task into TODO steps.
+    Break this task into 3-5 actionable TODO steps.
+    Task: {user_task}
+    Return only bullet points.
+    """
 
-Task: {user_task}
+    try:
+        response = llm.invoke(prompt)
+        todos = response.content.split("\n")
+        return todos
 
-Return one task per line only.
-No explanation.
-"""
-
-    response = llm.invoke(prompt)
-
-    raw = response.content
-    print("RAW TODO RESPONSE:", raw)
-
-    todos = [
-        line.strip("-•1234567890. ").strip()
-        for line in raw.split("\n")
-        if line.strip()
-    ]
-
-    print("PARSED TODOS:", todos)
-
-    return todos
+    except Exception as e:
+        return [f"Groq API Error: {str(e)}"]
